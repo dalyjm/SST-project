@@ -1,0 +1,71 @@
+---
+title: "quant project"
+output: html_document
+---
+
+```{r}
+tank<-sample(c("S1", "S2", "S3", "S4", "ENV"), 183, replace = TRUE)
+sdens<-as.numeric(sample(seq(1000000,9000000, 100000), 183, replace=TRUE))
+swim<-as.numeric(sample(seq(0.5, 7, 0.01), 183, replace=TRUE))
+prHb<-sample(seq(5.9,6.3, 0.01), 183, replace=TRUE)
+poHb<-sample(seq(6.2,6.9, 0.01), 183, replace=TRUE)
+prHct<-sample(seq(25,28, 0.1), 183, replace=TRUE)
+poHct<-sample(seq(27,31, 0.1), 183, replace=TRUE)
+bLac<-sample(seq(4.0,6.8, 0.01), 183, replace=TRUE)
+bGlu<-sample(seq(4.6,8, 0.01), 183, replace=TRUE)
+mLac<-sample(seq(24,30, 0.01), 183, replace=TRUE)
+mGlu<-sample(seq(1.5,3.3, 0.01), 183, replace=TRUE)
+mGly<-sample(seq(1.5,3.8, 0.01), 183, replace=TRUE)
+CS<-sample(seq(0.1,0.5, 0.01), 183, replace=TRUE)
+LDH<-sample(seq(0.2,0.8, 0.01), 183, replace=TRUE)
+leng<-sample(119:200, 183, replace=TRUE)
+sex<-sample(c("M", "F"), 183, replace = TRUE)
+```
+
+```{r}
+SSTdata<-as.data.frame(cbind(tank, sdens, swim, prHb, poHb, prHct, poHct, bLac, bGlu, mLac, mGlu, mGly, CS, LDH, leng, sex))
+
+```
+
+```{r}
+timexspore<-lm(as.numeric(SSTdata$swim) ~ as.numeric(SSTdata$sdens))
+summary(timexspore)
+```
+```{r}
+library(ggplot2)
+```
+```{r}
+ggplot(SSTdata, aes(x = as.numeric(sdens), y = as.numeric(swim))) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+```
+
+```{r}
+physio<-as.numeric(SSTdata$prHb)+as.numeric(SSTdata$poHb)+as.numeric(SSTdata$prHct)+as.numeric(SSTdata$poHct)+as.numeric(SSTdata$bLac)+as.numeric(SSTdata$mLac)+as.numeric(SSTdata$bGlu)+as.numeric(SSTdata$mGlu)+as.numeric(SSTdata$mGly)+as.numeric(SSTdata$CS)+as.numeric(SSTdata$LDH)
+
+ts2<-lm(as.numeric(SSTdata$swim) ~ as.numeric(SSTdata$sdens) + physio + as.numeric(SSTdata$leng))
+
+summary(ts2)
+```
+
+```{r}
+ggplot(SSTdata, aes(x = as.numeric(sdens) + physio + as.numeric(SSTdata$leng), y = as.numeric(swim))) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
