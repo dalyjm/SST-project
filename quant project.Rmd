@@ -54,7 +54,10 @@ ggplot(SSTdata, aes(x = as.numeric(sdens) + physio + as.numeric(SSTdata$leng), y
   stat_smooth(method = "lm", col = "red")
 ```
 
-
+```{r}
+pca1<-prcomp(as.numeric(SSTdata$swim) + as.numeric(SSTdata$sdens) + physio + as.numeric(SSTdata$leng), scale=TRUE)
+summary(pca1)
+```
 
 
 
