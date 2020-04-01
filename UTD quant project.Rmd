@@ -23,9 +23,17 @@ sex<-sample(c("M", "F"), 183, replace = TRUE)
 ```
 
 ```{r}
-SSTdata<-as.data.frame(cbind(tank, sdens, swim, prHb, poHb, prHct, poHct, bLac, bGlu, mLac, mGlu, mGly, CS, LDH, leng, sex))
+SSTdata<-data.frame(tank, sdens, swim, prHb, poHb, prHct, poHct, bLac, bGlu, mLac, mGlu, mGly, CS, LDH, leng, sex)
 
 ```
+
+```{r}
+print(SSTdata)
+```
+
+
+
+
 
 ```{r}
 timexspore<-lm(as.numeric(SSTdata$swim) ~ as.numeric(SSTdata$sdens))
@@ -70,22 +78,45 @@ library(lattice)
 library(vegan)
 ```
 
+
 ```{r}
-PCA1<-rda(SSTdata ~ 1)
-summary(PCA1)
+names(SSTdata) %in% c('tank', 'sex')
+subSST<-SSTdata[, !(names(SSTdata) %in% c('tank', 'sex'))]
+subSST
 ```
 
 ```{r}
-nums<-as.numeric(SSTdata$swim) ~ as.numeric(SSTdata$sdens) + physio + as.numeric(SSTdata$leng)
-PCA2<-rda(nums ~ 1)
+PCA1<-rda(subSST ~ 1, scale = TRUE)
+summary(PCA1)
+```
+
+
+```{r}
+plot(PCA1)
+
+```
+
+```{r}
+physSST<-SSTdata[, !(names(SSTdata) %in% c('tank', 'sex', 'leng', 'sdens'))]
+physSST
+```
+
+```{r}
+PCA2<-rda(physSST ~ SSTdata$sdens, scale = TRUE)
 summary(PCA2)
 ```
 
 ```{r}
-library(pwr)
-power1<-power.anova.test(k = 5, f = 0.25, sig.level = 0.01, power = 0.9)
-power1
+plot(PCA2)
 ```
+
+
+```{r}
+library(pwr)
+p1<-pwr.anova.test(f=0.25,k=5,sig.level=0.05,power=0.9)
+p1
+```
+
 
 
 
