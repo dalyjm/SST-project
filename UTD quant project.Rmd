@@ -3,6 +3,7 @@ title: "quant project"
 output: html_document
 ---
 
+Randomly generate data for all of my parameters
 ```{r}
 tank<-sample(c("S1", "S2", "S3", "S4", "ENV"), 183, replace = TRUE)
 sdens<-as.numeric(sample(seq(1000000,9000000, 100000), 183, replace=TRUE))
@@ -22,6 +23,7 @@ leng<-sample(119:200, 183, replace=TRUE)
 sex<-sample(c("M", "F"), 183, replace = TRUE)
 ```
 
+Create a dataset using those generated values
 ```{r}
 SSTdata<-data.frame(tank, sdens, swim, prHb, poHb, prHct, poHct, bLac, bGlu, mLac, mGlu, mGly, CS, LDH, leng, sex)
 
@@ -33,35 +35,46 @@ print(SSTdata)
 
 
 
-
+Linear model to see relationship between myxospore density and swim time
 
 ```{r}
 timexspore<-lm(as.numeric(SSTdata$swim) ~ as.numeric(SSTdata$sdens))
 summary(timexspore)
 ```
+
+Plot lm from above
 ```{r}
 library(ggplot2)
 ```
 ```{r}
 ggplot(SSTdata, aes(x = as.numeric(sdens), y = as.numeric(swim))) + 
   geom_point() +
-  stat_smooth(method = "lm", col = "red")
+  stat_smooth(method = "lm", col = "red") +
+  ggtitle("Relationship Between Swim Time and Myxospore Density") +
+  labs(y= "swim time to exhaustion (min)", x = "myxospore density")
 ```
 
+Define physio to include all physiological parameters including hematocrit/hemoglobin/lactate/glucose/glycogen/CS/LDH
+
+run a lm to see how spore density combined with physiological parameters affects swim time
 ```{r}
 physio<-as.numeric(SSTdata$prHb)+as.numeric(SSTdata$poHb)+as.numeric(SSTdata$prHct)+as.numeric(SSTdata$poHct)+as.numeric(SSTdata$bLac)+as.numeric(SSTdata$mLac)+as.numeric(SSTdata$bGlu)+as.numeric(SSTdata$mGlu)+as.numeric(SSTdata$mGly)+as.numeric(SSTdata$CS)+as.numeric(SSTdata$LDH)
 
-ts2<-lm(as.numeric(SSTdata$swim) ~ as.numeric(SSTdata$sdens) + physio + as.numeric(SSTdata$leng))
+ts2<-lm(as.numeric(SSTdata$swim) ~ as.numeric(SSTdata$sdens) + physio)
 
 summary(ts2)
 ```
 
+plot lm from above
 ```{r}
-ggplot(SSTdata, aes(x = as.numeric(sdens) + physio + as.numeric(SSTdata$leng), y = as.numeric(swim))) + 
+ggplot(SSTdata, aes(x = as.numeric(sdens) + physio, y = as.numeric(swim))) + 
   geom_point() +
-  stat_smooth(method = "lm", col = "red")
+  stat_smooth(method = "lm", col = "red") +
+  ggtitle("Relationship Between Swim Time and Physiological Parameters") +
+  labs(y= "swim time to exhaustion (min)", x = "physiological suite")
 ```
 
+run anova and tukey to look for differences between 5 different tanks
 ```{r}
 tankaov<-aov(as.numeric(sdens) ~ tank, data=SSTdata)
 summary(tankaov)
@@ -78,52 +91,72 @@ library(lattice)
 library(vegan)
 ```
 
-
+create a subset of SST that excludes non-numeric columns (tank and sex)
 ```{r}
 names(SSTdata) %in% c('tank', 'sex')
 subSST<-SSTdata[, !(names(SSTdata) %in% c('tank', 'sex'))]
 subSST
 ```
 
+PCA and plot of numeric SST subset
 ```{r}
 PCA1<-rda(subSST ~ 1, scale = TRUE)
-summary(PCA1)
 ```
 
 
 ```{r}
-plot(PCA1)
+plot(PCA1, main="Seatrout Data PCA")
 
 ```
 
+create new subset including all parameters of physiological nature, as well as swim time (expected to be connected in real exp)
 ```{r}
 physSST<-SSTdata[, !(names(SSTdata) %in% c('tank', 'sex', 'leng', 'sdens'))]
 physSST
 ```
 
+RDA investigating effects of myxospore density on physiological suite
 ```{r}
 PCA2<-rda(physSST ~ SSTdata$sdens, scale = TRUE)
-summary(PCA2)
 ```
 
 ```{r}
-plot(PCA2)
+plot(PCA2, main="Seatrout Data RDA")
 ```
 
 
+power analysis to see how many fish needed per tank to ensure high power
 ```{r}
 library(pwr)
-p1<-pwr.anova.test(f=0.25,k=5,sig.level=0.05,power=0.9)
+p1<-pwr.anova.test(f=0.25,n=50,k=5,sig.level=0.05)
 p1
 ```
 
+convertSSTdata to a CSV file
+```{r}
+write.csv(SSTdata,"C:\\Users\\Jessica Daly\\Documents\\R\\SST-project\\SSTdata.csv", row.names = TRUE)
+```
 
+attempt at setting up PCA2 in ggplot
+```{r}
+PCA2_out <- as.data.frame(PCA2$x)
+PCA2_out$group <- sapply( strsplit(as.character(row.names(df)), "_"), "[[", 1 )
+head(PCA2_out)
+```
 
+```{r}
+library(ggplot2)
+library(grid)
+library(gridExtra)
+```
 
-
-
-
-
+```{r}
+ggPCA2<-ggplot(PCA2_out,aes(x=SSTdata$sdens,y=physio,color=tank)) +
+        ggtitle("Relationship Between Myxospore Density and Physiological Parameters") +
+        labs(y= "physiological suite", x = "myxospore density")
+ggPCA2<-ggPCA2+geom_point()
+ggPCA2
+```
 
 
 
